@@ -779,9 +779,6 @@ def check_collision_pacman_ghost(pacman_instance, ghost_instance):
 
     return distance < collision_threshold
 
-
-# ... (sua função reset_level() existente) ...
-
 # --- Função para lidar com a morte do Pac-Man ---
 def handle_pacman_death():
     global lives, game_over, pacman, ghosts, \
