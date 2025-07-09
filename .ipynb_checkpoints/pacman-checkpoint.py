@@ -1,7 +1,6 @@
 import pygame
 import math
 import random
-import sys
 
 # 2. Constantes do Jogo (Cores, Tamanhos, Velocidades, etc.)
 # Cores Gerais (RGB)
@@ -105,7 +104,8 @@ level = [
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 4, 4, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1],# Linha da porta dos fantasmas
+    [1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 1, 4, 4, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1],
+    # Linha da porta dos fantasmas
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1],
     [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],  # Túnel lateral
@@ -138,7 +138,6 @@ for r_idx, row in enumerate(original_level):
             total_pills += 1
 
 pills_left = total_pills
-# depuracção print({pills_left})
 
 
 def _is_in_ghost_house_area(r, c):
@@ -156,7 +155,7 @@ class PacMan:
 
         # Variáveis para a pílula de poder
         self.is_powered_up = False
-        self.power_up_timer = 0  # Usaremos pygame.time.get_ticks() para gerenciar isso
+        self.power_up_timer = 0
 
         # Posição em pixels, centralizada na célula
         self.pixel_x = float(self.grid_x * cell_size + cell_size // 2)
@@ -224,7 +223,7 @@ class PacMan:
         target_grid_y = current_grid_y + dy_check
 
         # --- LÓGICA PARA TÚNEL: Permite movimento para fora do grid para teletransporte ---
-        tunnel_row = 15  # <--- Defina esta constante para a linha do túnel (índice 15)
+        tunnel_row = 15
 
         # Se o Pac-Man está na linha do túnel E está tentando se mover para fora da tela
         if current_grid_y == tunnel_row:
@@ -256,9 +255,6 @@ class PacMan:
 
         points_gained = 0  # Inicializa a pontuação ganha neste frame
         pill_eaten_this_frame = False  # Para saber se comeu algo
-
-        # --- DEPURAÇÃO CRÍTICA: Posição do Pac-Man (SEMPRE ATIVO) ---
-        # print(f"PacMan Grid: ({self.grid_x}, {self.grid_y}) | Pixel: ({self.pixel_x:.2f}, {self.pixel_y:.2f}) | DX: {self.dx}, DY: {self.dy}")
 
         # 2. Lógica de virada e movimento (com base na desired_direction)
         if self.desired_dx_val != 0 or self.desired_dy_val != 0:
@@ -452,8 +448,6 @@ class Ghost:
             self.last_moved_direction = (0, 0)
             self.is_exiting_house = False
 
-        # print(f"DEBUG_GHOST_INIT_POS: {self.name} - Pos inicial: ({self.grid_x},{self.grid_y}) | is_exiting_house: {self.is_exiting_house} | released: {self.released}")
-
     def get_grid_pos(self):
         return int(self.pixel_x // self.cell_size), int(self.pixel_y // self.cell_size)
 
@@ -479,8 +473,6 @@ class Ghost:
 
         target_cell_type = game_level[target_grid_y][target_grid_x]
 
-        # FANTASMAS COMIDOS (is_eaten=True) IGNORAM PAREDES E PORTAS.
-        # Eles não precisam de pathfinding, mas essa regra ainda é logicamente correta.
         if self.is_eaten:
             return True
 
@@ -540,7 +532,6 @@ class Ghost:
         aligned_y = abs(self.pixel_y - center_y_of_current_grid) <= tolerance
 
         # A lógica de re-cálculo da direção só ocorre quando o fantasma está alinhado
-        # (mas não para fantasmas comidos, que são teleportados)
         if aligned_x and aligned_y and not self.is_eaten:  # Fantasmas comidos NÃO usam essa parte
             self.pixel_x = float(center_x_of_current_grid)
             self.pixel_y = float(center_y_of_current_grid)
@@ -683,11 +674,9 @@ class Ghost:
         eye_radius = int(self.radius * 0.2)
         eye_offset = int(self.radius * 0.3)
         pygame.draw.circle(screen, WHITE, (int(self.pixel_x - eye_offset), int(self.pixel_y - eye_offset)), eye_radius)
-        pygame.draw.circle(screen, BLACK, (int(self.pixel_x - eye_offset), int(self.pixel_y - eye_offset)),
-                           int(eye_radius * 0.5))
+        pygame.draw.circle(screen, BLACK, (int(self.pixel_x - eye_offset), int(self.pixel_y - eye_offset)), int(eye_radius * 0.5))
         pygame.draw.circle(screen, WHITE, (int(self.pixel_x + eye_offset), int(self.pixel_y - eye_offset)), eye_radius)
-        pygame.draw.circle(screen, BLACK, (int(self.pixel_x + eye_offset), int(self.pixel_y - eye_offset)),
-                           int(eye_radius * 0.5))
+        pygame.draw.circle(screen, BLACK, (int(self.pixel_x + eye_offset), int(self.pixel_y - eye_offset)), int(eye_radius * 0.5))
 
 # 5. Inicialização do Pygame
 pygame.init()
@@ -737,7 +726,6 @@ def reset_level():
     pills_left = total_pills
 
     # 3. Redefinir a posição do Pac-Man
-    # (Você pode querer uma posição inicial diferente para cada nível ou sempre a mesma)
     pacman.pixel_x = float(14 * CELL_SIZE + CELL_SIZE // 2)  # Posição inicial Pac-Man
     pacman.pixel_y = float(22 * CELL_SIZE + CELL_SIZE // 2)
     pacman.dx = 0
@@ -779,7 +767,8 @@ def check_collision_pacman_ghost(pacman_instance, ghost_instance):
 
     return distance < collision_threshold
 
-# --- Função para lidar com a morte do Pac-Man ---
+
+# --- Função para a morte do Pac-Man ---
 def handle_pacman_death():
     global lives, game_over, pacman, ghosts, \
         ghost_release_timer, released_ghost_count, game_phase, last_phase_change_time
@@ -901,7 +890,7 @@ while running:
             if ghost.released or ghost.is_eaten:
                 ghost.update(level, pacman, game_phase)
 
-        # --- Verificar Colisões Pac-Man vs Fantasmas (Lógica ATUALIZADA para Vidas) ---
+        # --- Verificar Colisões Pac-Man vs Fantasmas ---
         for ghost in ghosts:
             if check_collision_pacman_ghost(pacman, ghost):
                 if ghost.is_frightened and not ghost.is_eaten:

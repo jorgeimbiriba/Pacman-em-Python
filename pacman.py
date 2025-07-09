@@ -1,7 +1,6 @@
 import pygame
 import math
 import random
-import sys
 
 # 2. Constantes do Jogo (Cores, Tamanhos, Velocidades, etc.)
 # Cores Gerais (RGB)
