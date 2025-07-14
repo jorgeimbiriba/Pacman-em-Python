@@ -690,17 +690,17 @@ clock = pygame.time.Clock() # Para controlar o FPS
 # Crie seu Pac-Man
 pacman = PacMan(14, 22, PACMAN_RADIUS, PACMAN_SPEED, CELL_SIZE)
 score = 0
-last_score_rendered = -1  # <--- Variável para controlar a renderização do score
+last_score_rendered = -1 # <--- Variável para controlar a renderização do score
 game_phase = GHOST_PHASE_SCATTER
 last_phase_change_time = pygame.time.get_ticks()
 
 # --- Variáveis de Controle de Lançamento de Fantasmas ---
-ghost_release_timer = pygame.time.get_ticks()  # Tempo para controlar o lançamento sequencial
-released_ghost_count = 0  # Conta quantos fantasmas já foram lançados (exclui Blinky, que começa lançado)
-GHOST_RELEASE_INTERVAL = 3 * 1000  # 3 segundos entre o lançamento de cada fantasma
+ghost_release_timer = pygame.time.get_ticks() # Tempo para controlar o lançamento sequencial
+released_ghost_count = 0 # Conta quantos fantasmas já foram lançados (exclui Blinky, que começa lançado)
+GHOST_RELEASE_INTERVAL = 3 * 1000 # 3 segundos entre o lançamento de cada fantasma
 
-# --- Variável das Vidas ---
-lives = 3  # 3 vidas
+# --- Variável das Vidas --- 
+lives = 3 # 3 vidas
 
 #  --- Criação dos Fantasmas ---
 ghosts = []
@@ -709,24 +709,30 @@ ghosts.append(Ghost("blinky", GHOST_START_POSITIONS["blinky"][0], GHOST_START_PO
 ghosts.append(Ghost("pinky", GHOST_START_POSITIONS["pinky"][0], GHOST_START_POSITIONS["pinky"][1],
                     GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_PINKY_COLOR, CELL_SIZE))
 ghosts.append(Ghost("inky", GHOST_START_POSITIONS["inky"][0], GHOST_START_POSITIONS["inky"][1],
-                    GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
+                   GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
 ghosts.append(Ghost("clyde", GHOST_START_POSITIONS["clyde"][0], GHOST_START_POSITIONS["clyde"][1],
                     GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_CLYDE_COLOR, CELL_SIZE))
-
 
 # --- Lógica de Reinício de Nível ---
 def reset_level():
     global level, pills_left, score, pacman, original_level, ghosts, \
-        ghost_release_timer, released_ghost_count, game_phase, last_phase_change_time, lives
-
+           ghost_release_timer, released_ghost_count, game_phase, last_phase_change_time, lives, total_pills, game_over
+    
     # 1. Redefinir o labirinto para o estado original
-    level = [row[:] for row in original_level]  # Copia o labirinto original de volta
-
+    level = [row[:] for row in original_level] # Copia o labirinto original de volta
+    
     # 2. Redefinir a contagem de pílulas
-    pills_left = total_pills
+    recalculated_total_pills = 0
+    for r_idx, row in enumerate(level):
+        for c_idx, cell in enumerate(row):
+            if cell == 2 or cell == 3:
+                recalculated_total_pills += 1
 
+    total_pills = recalculated_total_pills # Atualiza a variável global total_pills
+    pills_left = recalculated_total_pills  # pills_left recebe o valor recalculado e preciso
+    
     # 3. Redefinir a posição do Pac-Man
-    pacman.pixel_x = float(14 * CELL_SIZE + CELL_SIZE // 2)  # Posição inicial Pac-Man
+    pacman.pixel_x = float(14 * CELL_SIZE + CELL_SIZE // 2) # Posição inicial Pac-Man
     pacman.pixel_y = float(22 * CELL_SIZE + CELL_SIZE // 2)
     pacman.dx = 0
     pacman.dy = 0
@@ -734,47 +740,54 @@ def reset_level():
     pacman.desired_dy_val = 0
     pacman.is_powered_up = False
     pacman.power_up_timer = 0
-    pacman.mouth_open = True  # Reseta a boca para aberta
+    pacman.mouth_open = True # Reseta a boca para aberta
     pacman.current_mouth_angle = pacman.open_mouth_angle
     pacman.facing_angle = 0
     pacman.last_moved_direction = (1, 0)
 
-    ghosts.clear()  # Limpa a lista atual de fantasmas
-    ghosts.append(Ghost("blinky", GHOST_START_POSITIONS["blinky"][0], GHOST_START_POSITIONS["blinky"][1],
+    ghosts.clear() # Limpa a lista atual de fantasmas
+    ghosts.append(Ghost("blinky", GHOST_START_POSITIONS["blinky"][0], GHOST_START_POSITIONS["blinky"][1], 
                         GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_BLINKY_COLOR, CELL_SIZE))
-    ghosts.append(Ghost("pinky", GHOST_START_POSITIONS["pinky"][0], GHOST_START_POSITIONS["pinky"][1],
+    ghosts.append(Ghost("pinky", GHOST_START_POSITIONS["pinky"][0], GHOST_START_POSITIONS["pinky"][1], 
                         GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_PINKY_COLOR, CELL_SIZE))
-    ghosts.append(Ghost("inky", GHOST_START_POSITIONS["inky"][0], GHOST_START_POSITIONS["inky"][1],
-                        GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
-    ghosts.append(Ghost("clyde", GHOST_START_POSITIONS["clyde"][0], GHOST_START_POSITIONS["clyde"][1],
+    ghosts.append(Ghost("inky", GHOST_START_POSITIONS["inky"][0], GHOST_START_POSITIONS["inky"][1], 
+                       GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
+    ghosts.append(Ghost("clyde", GHOST_START_POSITIONS["clyde"][0], GHOST_START_POSITIONS["clyde"][1], 
                         GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_CLYDE_COLOR, CELL_SIZE))
 
-    ghost_release_timer = pygame.time.get_ticks()  # Reinicia o timer de lançamento
-    released_ghost_count = 0  # Reseta a contagem de fantasmas lançados
+    ghost_release_timer = pygame.time.get_ticks()
+    released_ghost_count = 0
+    game_phase = GHOST_PHASE_SCATTER
+    last_phase_change_time = pygame.time.get_ticks()
     print("Nível Reiniciado! Todas as pílulas consumidas.")
 
+    # --- RESET CRÍTICO: Resetar vidas, score e a flag de game_over para o início de um NOVO JOGO ---
+    lives = 3 # Reseta as vidas para o valor inicial de um novo jogo
+    score = 0 # Reseta o score para 0 no início de um novo jogo
+    game_over = False # Garante que a flag de game_over está False
+    
 
 # --- Função para verificar colisão entre Pac-Man e Fantasma ---
 def check_collision_pacman_ghost(pacman_instance, ghost_instance):
     # Calcula a distância entre os centros do Pac-Man e do fantasma
     distance_x = pacman_instance.pixel_x - ghost_instance.pixel_x
     distance_y = pacman_instance.pixel_y - ghost_instance.pixel_y
-    distance = math.sqrt(distance_x ** 2 + distance_y ** 2)
+    distance = math.sqrt(distance_x**2 + distance_y**2)
 
     # Colisão ocorre se a distância entre os centros é menor que a soma dos seus raios
     # Subtraia um pouco para uma colisão mais "generosa" ou deixe como soma exata.
-    collision_threshold = pacman_instance.radius + ghost_instance.radius - 5  # -5 para ser um pouco mais permissivo
+    collision_threshold = pacman_instance.radius + ghost_instance.radius - 5 # -5 para ser um pouco mais permissivo
 
     return distance < collision_threshold
-
 
 # --- Função para a morte do Pac-Man ---
 def handle_pacman_death():
     global lives, game_over, pacman, ghosts, \
-        ghost_release_timer, released_ghost_count, game_phase, last_phase_change_time
+           ghost_release_timer, released_ghost_count, game_phase, last_phase_change_time
 
-    lives -= 1
-    print(f"Pac-Man perdeu uma vida! Vidas restantes: {lives}")
+    if lives > 0: 
+        lives -= 1
+        print(f"Pac-Man perdeu uma vida! Vidas restantes: {lives}")
 
     if lives <= 0:
         game_over = True
@@ -789,8 +802,8 @@ def handle_pacman_death():
         pacman.dy = 0
         pacman.desired_dx_val = 0
         pacman.desired_dy_val = 0
-        pacman.is_powered_up = False  # Perde o power-up ao morrer
-        pacman.power_up_timer = 0  # Zera o timer de power-up
+        pacman.is_powered_up = False # Perde o power-up ao morrer
+        pacman.power_up_timer = 0 # Zera o timer de power-up
 
         # Recria todos os fantasmas para resetar seus estados
         ghosts.clear()
@@ -799,37 +812,37 @@ def handle_pacman_death():
         ghosts.append(Ghost("pinky", GHOST_START_POSITIONS["pinky"][0], GHOST_START_POSITIONS["pinky"][1],
                             GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_PINKY_COLOR, CELL_SIZE))
         ghosts.append(Ghost("inky", GHOST_START_POSITIONS["inky"][0], GHOST_START_POSITIONS["inky"][1],
-                            GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
+                           GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_INKY_COLOR, CELL_SIZE))
         ghosts.append(Ghost("clyde", GHOST_START_POSITIONS["clyde"][0], GHOST_START_POSITIONS["clyde"][1],
                             GHOST_RADIUS, GHOST_SPEED_NORMAL, GHOST_CLYDE_COLOR, CELL_SIZE))
 
         # Reinicia os timers de liberação de fantasmas e a fase do jogo
         ghost_release_timer = pygame.time.get_ticks()
         released_ghost_count = 0
-        game_phase = GHOST_PHASE_SCATTER  # Volta para a fase inicial
+        game_phase = GHOST_PHASE_SCATTER # Volta para a fase inicial
         last_phase_change_time = pygame.time.get_ticks()
 
 
 # 7. Loop Principal do Jogo
 running = True
-game_over = False  # Variável para controlar o estado de Game Over
+game_over = False # Variável para controlar o estado de Game Over
 
 while running:
     # 7.1. Processamento de Eventos (Entrada do Usuário, Fechar Janela)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False  # Encerra o loop principal
-
+            running = False # Encerra o loop principal
+        
         # Este bloco processa as teclas pressionadas
         if event.type == pygame.KEYDOWN:
             # Lógica para reiniciar o jogo quando é Game Over (prioridade)
             if game_over:
-                if event.key == pygame.K_RETURN:  # Verifica se a tecla ENTER foi pressionada
-                    game_over = False  # Reseta a flag de Game Over
-                    reset_level()  # Chama a função para reiniciar o jogo
-
+                if event.key == pygame.K_RETURN: # Verifica se a tecla ENTER foi pressionada
+                    game_over = False # Reseta a flag de Game Over
+                    reset_level()     # Chama a função para reiniciar o jogo
+            
             # Lógica para movimento do Pac-Man (só se o jogo NÃO for Game Over)
-            else:  # if not game_over
+            else: # if not game_over
                 if event.key == pygame.K_LEFT:
                     pacman.set_direction(-1, 0)
                 elif event.key == pygame.K_RIGHT:
@@ -839,8 +852,9 @@ while running:
                 elif event.key == pygame.K_DOWN:
                     pacman.set_direction(0, 1)
 
+
     # 7.2. Atualização do Estado do Jogo (Lógica do Jogo)
-    if not game_over:  # Só atualiza a lógica do jogo se não for Game Over
+    if not game_over: # Só atualiza a lógica do jogo se não for Game Over
         points_gained, pill_eaten_this_frame = pacman.update(level)
 
         if points_gained > 0:
@@ -901,7 +915,7 @@ while running:
                 elif not ghost.is_frightened and not ghost.is_eaten:
                     # Chamada para a nova função que lida com a morte do Pac-Man
                     handle_pacman_death()
-                    break  # Importante para sair do loop de fantasmas após uma colisão fatal
+                    break # Importante para sair do loop de fantasmas após uma colisão fatal
 
         # --- Gerenciar Status dos Fantasmas (Ciclo Scatter/Chase) ---
         current_time = pygame.time.get_ticks()
@@ -929,16 +943,14 @@ while running:
                     ghost.dy *= -1
                     ghost.last_moved_direction = (ghost.dx // ghost.current_speed if ghost.current_speed != 0 else 0,
                                                   ghost.dy // ghost.current_speed if ghost.current_speed != 0 else 0)
-                    print(
-                        f"DEBUG_FRIGHTEN: Fantasma {ghost.name} ficou assustado e inverteu a direção! (Old is_frightened: {old_frightened_state})")
+                    print(f"DEBUG_FRIGHTEN: Fantasma {ghost.name} ficou assustado e inverteu a direção! (Old is_frightened: {old_frightened_state})")
             elif not pacman.is_powered_up:
                 if ghost.is_frightened:
                     ghost.is_frightened = False
                     ghost.current_speed = GHOST_SPEED_NORMAL
-                    print(
-                        f"DEBUG_FRIGHTEN: Fantasma {ghost.name} deixou de estar assustado! (Old is_frightened: {old_frightened_state})")
+                    print(f"DEBUG_FRIGHTEN: Fantasma {ghost.name} deixou de estar assustado! (Old is_frightened: {old_frightened_state})")
 
-    # 7.3. Desenho na Tela (esta parte permanece a mesma)
+    # 7.3. Desenho na Tela 
     screen.fill(BLACK)
 
     for row_index, row in enumerate(level):
